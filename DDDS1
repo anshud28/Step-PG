@@ -1,0 +1,441 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "name": "Untitled0.ipynb",
+      "provenance": [],
+      "authorship_tag": "ABX9TyPvSw8HTMmtYUTNWhjVu+Wn",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/anshud28/Step-PG/blob/main/DDDS1\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "e2GiJ2hOjCfG"
+      },
+      "outputs": [],
+      "source": [
+        "#Importing libraries\n",
+        "!pip install opencv-python\n",
+        "!pip install pandas\n",
+        "import cv2\n",
+        "import pandas as pd\n",
+        "import numpy as np\n",
+        "!pip install matplotlib\n",
+        "import matplotlib.pyplot as plt"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "#connect to google drive to access dataset\n",
+        "from google.colab import drive\n",
+        "drive.mount('/content/drive')"
+      ],
+      "metadata": {
+        "id": "Qn9UNbyqjS3Z"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Load the Drive helper and mount\n",
+        "img_array = cv2.imread('/content/drive/MyDrive/Dataset/Drowsiness/train/Closed_Eyes/s0001_00001_0_0_0_0_0_01.png', cv2.IMREAD_GRAYSCALE)\n",
+        "plt.imshow(img_array, cmap=\"gray\")"
+      ],
+      "metadata": {
+        "id": "rmuVjNvmjU6Q"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "img_array.shape"
+      ],
+      "metadata": {
+        "id": "5psZLz74jXR7"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import os"
+      ],
+      "metadata": {
+        "id": "Nn561kG6jYz2"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "Datadirectory = r'/content/drive/MyDrive/Dataset/Drowsiness/train'\n",
+        "Classes = ['Closed_Eyes', 'Open_Eyes']\n",
+        "# Datadirectory = 'dataset_new/train/'\n",
+        "# Classes = ['Closed', 'Open']\n",
+        "for category in Classes:\n",
+        "  path = os.path.join(Datadirectory, category)\n",
+        "  for img in os.listdir(path):\n",
+        "    img_array = cv2.imread(os.path.join(path,img), cv2.IMREAD_GRAYSCALE)\n",
+        "    backtorgb = cv2.cvtColor(img_array,cv2.COLOR_GRAY2RGB)\n",
+        "    plt.imshow(img_array, cmap=\"gray\")\n",
+        "    plt.show()\n",
+        "    break\n",
+        "  break"
+      ],
+      "metadata": {
+        "id": "t5tNJr4-jaxp"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "#Resizing the image to standard size\n",
+        "img_size = 224\n",
+        "new_array = cv2.resize(backtorgb, (img_size,img_size))\n",
+        "plt.imshow(new_array, cmap=\"gray\")\n",
+        "plt.show()"
+      ],
+      "metadata": {
+        "id": "laJSuGmqjcoq"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "training_data = []\n",
+        "\n",
+        "def create_training_data():\n",
+        "  for category in Classes:\n",
+        "      path = os.path.join(Datadirectory, category)\n",
+        "      class_num = Classes.index(category)\n",
+        "      for img in os.listdir(path):\n",
+        "        try :\n",
+        "           img_array = cv2.imread(os.path.join(path,img), cv2.IMREAD_GRAYSCALE)\n",
+        "           backtorgb = cv2.cvtColor(img_array,cv2.COLOR_GRAY2RGB)\n",
+        "           new_array = cv2.resize(backtorgb, (img_size,img_size))\n",
+        "           training_data.append([new_array, class_num])\n",
+        "        except Exception as e:\n",
+        "          pass"
+      ],
+      "metadata": {
+        "id": "7-CjKT0ujfCE"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "create_training_data()\n",
+        "print(len(training_data))"
+      ],
+      "metadata": {
+        "id": "2NDZ-fPpjhY3"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import random\n",
+        "random.shuffle(training_data)\n",
+        "#here we reshape the image.\n",
+        "X = []\n",
+        "y = []\n",
+        "for features, label in training_data:\n",
+        "  X.append(features)\n",
+        "  y.append(label)\n",
+        "    \n",
+        "X = np.array(X).reshape(-1, img_size, img_size, 3)"
+      ],
+      "metadata": {
+        "id": "LcZSVzWmjjPn"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "X.shape\n",
+        "(4000, 224, 224, 3)\n",
+        "X = X/255.0\n",
+        "Y = np.array(y)"
+      ],
+      "metadata": {
+        "id": "8GHT5LORjk9q"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "#Checking installation of tensorflow for training\n",
+        "!pip install tensorflow\n",
+        "import tensorflow as tf\n",
+        "from tensorflow import keras\n",
+        "from tensorflow.keras import layers"
+      ],
+      "metadata": {
+        "id": "8WBfCLtnjmp7"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!pip install cython h5py --user"
+      ],
+      "metadata": {
+        "id": "xvjjjLyZjpNX"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "#creating instance for neural network model\n",
+        "model = tf.keras.applications.mobilenet.MobileNet()"
+      ],
+      "metadata": {
+        "id": "RDcVvJ1UjsT_"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "model.summary()"
+      ],
+      "metadata": {
+        "id": "DVL2hkR6jt_D"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "base_input = model.layers[0].input\n",
+        "base_output = model.layers[-4].output"
+      ],
+      "metadata": {
+        "id": "H4fyBKktjxO2"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "#Flattening layers \n",
+        "#Calling activation function for classification purposes\n",
+        "\n",
+        "Flat_layer = layers.Flatten()(base_output)\n",
+        "final_output = layers.Dense(1)(Flat_layer)\n",
+        "final_output = layers.Activation('sigmoid')(final_output)"
+      ],
+      "metadata": {
+        "id": "MltrGlMvj0eN"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "#creating a new instance of the model to fit the data\n",
+        "new_model = keras.Model(inputs = base_input, outputs = final_output)\n",
+        "new_model.summary()"
+      ],
+      "metadata": {
+        "id": "9mzlOseGj2Lm"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "new_model.compile(loss=\"binary_crossentropy\", optimizer = \"adam\", metrics = [\"accuracy\"])"
+      ],
+      "metadata": {
+        "id": "Bf3ln7Wyj4R6"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "new_model.fit(X,Y, epochs = 2, validation_split = 0.1)"
+      ],
+      "metadata": {
+        "id": "wBa-EhKsj6Jd"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "#saving my trained model\n",
+        "new_model.save('my_model.h5')"
+      ],
+      "metadata": {
+        "id": "Yh3BPqW5j7xf"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "#Loading my trained model\n",
+        "new_model = tf.keras.models.load_model('my_model.h5')"
+      ],
+      "metadata": {
+        "id": "zdnyPtDJj9Sl"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def start_camera():\n",
+        "  cap = cv2.VideoCapture(0) # using default camera\n",
+        "  cap.set(3,640) # width is id no 3\n",
+        "  cap.set(4,480) # height is id no 4\n",
+        "  cap.set(10,100) # Brightness id is 10\n",
+        "  counter=0\n",
+        "  frame_check=20\n",
+        "  i=0  #Frame_Counter\n",
+        "  while True:\n",
+        "    success, img = cap.read()\n",
+        "    if success==False:\n",
+        "      print('Camera opening failed')\n",
+        "      break\n",
+        "    cv2.imwrite('/content/drive/MyDrive/Dataset/Drowsiness/Live/live'+str(i)+'.png',img)\n",
+        "    #cv2.imshow(\"Output\",img)\n",
+        "    img_array = cv2.imread('/content/drive/MyDrive/Dataset/Drowsiness/Live/live'+str(i)+'.png' , cv2.IMREAD_GRAYSCALE)\n",
+        "    i+=1\n",
+        "    backtorgb = cv2.cvtColor(img_array, cv2.COLOR_GRAY2BGR)\n",
+        "    new_array = cv2.resize(backtorgb, (img_size, img_size))   #resize\n",
+        "\n",
+        "    X_input = np.array(new_array).reshape(1, img_size, img_size, 3)  #reshape\n",
+        "    #Prediction\n",
+        "    prediction = my_predict(X_input)\n",
+        "    if prediction == 'closed':\n",
+        "      counter+=1\n",
+        "      #if counter >= frame_check:\n",
+        "\t\t\t  #cv2.putText(img, \"****************ALERT!****************\", (10, 30),cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)\n",
+        "\t\t\t\t#cv2.putText(img, \"****************ALERT!****************\", (10,325),cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)\n",
+        "    else:\n",
+        "      counter=0\n",
+        " \n",
+        "    cv2.imshow(\"Frame\", img)\n",
+        "    if cv2.waitKey(1) & 0xFF == ord('q'):\n",
+        "      cv2.destroyAllWindows()\n",
+        "      cap.release()\n",
+        "      break"
+      ],
+      "metadata": {
+        "id": "e6trByo-kBLQ"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "#Prediction \n",
+        "def my_predict(X_input):\n",
+        "  X_input = X_input/255.0  #To get a value between 0 - 1\n",
+        "  prediction_val = new_model.predict(X_input)\n",
+        "  if prediction_val <=0.1:\n",
+        "    prediction=\"closed\"\n",
+        "  elif prediction_val >=0.9:\n",
+        "    prediction=\"Opened\"\n",
+        "\n",
+        "  return (prediction)"
+      ],
+      "metadata": {
+        "id": "2-frFLmMkDa6"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def main():\n",
+        "  while True:\n",
+        "    choice= input('Start driving? (yes/no): ')\n",
+        "    if choice=='yes' or choice=='Yes':\n",
+        "      start_camera()\n",
+        "    elif choice =='no' or choice == 'No':\n",
+        "      print('Bye!')\n",
+        "      break\n",
+        "    else:\n",
+        "      print('Wrong input.')\n",
+        "\n",
+        "if __name__ == \"__main__\":\n",
+        "    main()"
+      ],
+      "metadata": {
+        "id": "EoezM6aUkF0N"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "#prediction"
+      ],
+      "metadata": {
+        "id": "-kxs1wdIkIGj"
+      },
+      "execution_count": null,
+      "outputs": []
+    }
+  ]
+}
